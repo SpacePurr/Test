@@ -8,16 +8,18 @@ namespace Client
     class SqlMaster
     {
         private readonly string connectionString;
+
+        public bool IsConnected { get; set; }
+
         public SqlMaster(string connectionString)
         {
             this.connectionString = connectionString;
+
+            IsConnected = connectionString != null && ExecuteScalarCommand("select 1").ToString() == "1";
         }
 
         public object ExecuteScalarCommand(string cmdText)
         {
-            if(connectionString == null)
-                return "Отсутсвует подключение";
-
             using SqlConnection connection = new SqlConnection(connectionString);
             using (SqlCommand command = new SqlCommand(cmdText, connection))
             {

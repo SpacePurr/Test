@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -30,7 +31,7 @@ namespace Server
 
         private void InitializeSettings()
         {
-            Settings settings = CommonSerializer.Deserialize<Settings>("settings.xml");
+            Settings settings = CommonSerializer.Deserialize<Settings>(Path.Combine(Environment.CurrentDirectory, "settings.xml"));
             if (settings != null)
             {
                 _multicastPort = settings.MulticastPort;

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
+using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -20,7 +21,9 @@ namespace Client
         private string _multicastIPAddress;
         private int _multicastPort;
 
-        SqlMaster sqlMaster;
+        private SqlMaster sqlMaster;
+
+        private DateTime dateStart;
 
         public ClientMaster()
         {
@@ -28,7 +31,9 @@ namespace Client
         }
         private void InitializeSettings()
         {
-            Settings settings = CommonSerializer.Deserialize<Settings>("settings.xml");
+            dateStart = DateTime.UtcNow;
+
+            Settings settings = CommonSerializer.Deserialize<Settings>(Path.Combine(Environment.CurrentDirectory, "settings.xml"));
             if (settings != null)
             {
                 _multicastPort = settings.MulticastPort;
@@ -45,6 +50,13 @@ namespace Client
         {
             Console.WriteLine("Starting client...");
 
+            if(!sqlMaster.IsConnected)
+            {
+                Console.WriteLine("Cancel...");
+                Console.WriteLine("Server is not connected...");
+                return;
+            }
+
             using (_udpClient = new UdpClient())
             {
                 IPEndPoint localEP = new IPEndPoint(IPAddress.Any, _multicastPort);
@@ -60,6 +72,8 @@ namespace Client
 
                 _udpClient.BeginReceive(UDPReceiveCallback, null);
 
+                Console.WriteLine("Client started...");
+
                 await Task.Factory.StartNew(() => ProcessUserRequest());
             }
         }
@@ -69,6 +83,8 @@ namespace Client
         {
             try
             {
+                DataReport.PrintHelp();
+
                 string cmd;
                 while ((cmd = Console.ReadLine()) != "exit")
                     switch (cmd)
@@ -114,49 +130,44 @@ namespace Client
             {
                 //nLog.Error(e);
                 Console.WriteLine(e);
+                Console.ReadLine();
             }
         }
 
         private string GetLostPackages()
         {
-            string cmdText = $"select ((max(id_package) - min(id_package) + 1) - count(id)) from quotes";
+            string cmdText = $"select ((max(id_package) - min(id_package) + 1) - count(id)) from quotes where send_date >= '{dateStart}'";
             return sqlMaster.ExecuteScalarCommand(cmdText).ToString();
         }
         private string GetMedian()
         {
-            string cmdText = $"select" +
-                                    "(" +
-                                    "(select max(package) from " +
-                                    "(select top 50 percent package from Quotes order by package) as bottomHalf)" +
-                                    "+" +
-                                    "(select min(package) from " +
-                                    "(select top 50 percent package from quotes order by package desc) as topHalf)" +
-                                    ")/2 as median";
+            string cmdText = $"select top(1) percentile_disc(0.5) within group(order by package) over() from quotes where send_date >= '{dateStart}'";
 
             return sqlMaster.ExecuteScalarCommand(cmdText).ToString();
         }
         private string GetMode()
         {
             string cmdText = $"select top 1 with ties package " +
-                                    "from quotes " +
-                                    "where package is not null " +
-                                    "group by package " +
-                                    "order by count(*) desc";
-            return sqlMaster.ExecuteScalarCommand(cmdText).ToString();
+                                    $"from quotes " +
+                                    $"where send_date >= '{dateStart}' and " +
+                                    $"package is not null " +
+                                    $"group by package " +
+                                    $"order by count(*) desc";
+            return sqlMaster.ExecuteScalarCommand(cmdText)?.ToString();
         }
         private string GetCount()
         {
-            string cmdText = $"select count(*) from quotes";
+            string cmdText = $"select count(*) from quotes where send_date >= '{dateStart}'";
             return sqlMaster.ExecuteScalarCommand(cmdText).ToString();
         }
         private string GetAverage()
         {
-            string cmdText = $"select avg(cast(package as bigint)) from quotes";
+            string cmdText = $"select avg(cast(package as bigint)) from quotes where send_date >= '{dateStart}'";
             return sqlMaster.ExecuteScalarCommand(cmdText).ToString();
         }
         private string GetStandardDeviation()
         {
-            string cmdText = $"select stdev(package) from quotes";
+            string cmdText = $"select stdev(package) from quotes where send_date >= '{dateStart}'";
             return sqlMaster.ExecuteScalarCommand(cmdText).ToString();
         }
         #endregion
@@ -177,7 +188,7 @@ namespace Client
             try
             {
                 string[] temp = returnData.Split(':');
-                string sqlFormattedDate = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                string sqlFormattedDate = DateTime.UtcNow.ToString();
 
                 string cmdText = $"insert into quotes (id_package, package, send_date) values ({temp[0]}, {temp[1]}, '{sqlFormattedDate}')";
 
