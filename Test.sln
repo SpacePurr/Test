@@ -12,6 +12,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "MS_SQL_DataBase", "MS_SQL_D
 		MS_SQL_DataBase\create_table.sql = MS_SQL_DataBase\create_table.sql
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Task_2", "Task_2", "{5FD39BE6-1C7B-4824-9E4F-AAB5D9DADAFF}"
+	ProjectSection(SolutionItems) = preProject
+		Task_2\task_2_query.sql = Task_2\task_2_query.sql
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
