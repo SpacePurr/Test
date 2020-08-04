@@ -17,7 +17,7 @@ namespace Server
         private int _multicastPort;
         private int _port;
 
-        private int packageIndex;
+        private int _packageIndex;
         private readonly Random _rand = new Random();
 
         private int _start;
@@ -40,7 +40,7 @@ namespace Server
                 _end = settings.End;
             }
 
-            packageIndex = 1;
+            _packageIndex = 1;
         }
 
         public async Task Start()
@@ -61,15 +61,15 @@ namespace Server
 
         private void SendPackage()
         {
-            while (packageIndex < int.Parse("10e7", NumberStyles.AllowExponent))
-                Send($"{packageIndex} : {_rand.Next(_start, _end)}");
+            while (_packageIndex < int.Parse("10e7", NumberStyles.AllowExponent))
+                Send($"{_packageIndex} : {_rand.Next(_start, _end)}");
         }
 
         private void Send(string message)
         {
             byte[] bytes = Encoding.UTF8.GetBytes(message);
             _udpServer.Send(bytes, bytes.Length, _remoteEndPoint);
-            packageIndex++;
+            _packageIndex++;
         }
     }
 }
