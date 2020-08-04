@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<Settings xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <ServerCore>SQL_KHARITONOV</ServerCore>
+  <DataBase>profitdb</DataBase>
+  <MulticastIPAddress>239.0.0.222</MulticastIPAddress>
+  <MulticastPort>2222</MulticastPort>
+</Settings>
