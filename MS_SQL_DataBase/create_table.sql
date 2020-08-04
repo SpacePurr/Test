@@ -1,7 +1,7 @@
-CREATE TABLE Quotes
+create table quotes
 (
-	id int not null identity(1, 1) primary key,
-	id_package int,
-	package int,
-	send_date datetime,
+	id bigint not null identity(1, 1) primary key,
+	id_package bigint not null,
+	package bigint not null,
+	send_date datetime not null
 )
